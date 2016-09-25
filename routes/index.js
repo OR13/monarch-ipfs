@@ -5,6 +5,9 @@ var storage = gcloud.storage;
 var router = express.Router();
 var multipart = require('connect-multiparty');
 var multipartMiddleware = multipart();
+var ipfsAPI = require('ipfs-api')
+// connect to ipfs daemon API server
+var ipfs = ipfsAPI('localhost', '5001', {protocol: 'http'}) // leaving out the arguments will default to these values
 
 var projectId = 'transmute-industries';
 // var projectId = process.env.GCLOUD_PROJECT;
@@ -15,8 +18,8 @@ var gcs = storage({
 });
 
 // var firebaseApp = firebase.initializeApp({
-//   serviceAccount: "/Users/ericolszewski/Developer/JavaScript/mondarch-ipfs/credentials.json",
-//   databaseURL: "https://transmute-industries.firebaseio.com"
+//   serviceAccount: "./credentials.json",
+//   databaseURL: "process.env.DATABASE_URL"
 // });
 
 /* GET home page. */
@@ -25,16 +28,25 @@ router.get('/', function(req, res, next) {
 });
 
 router.post('/upload', multipartMiddleware, function(req, res, next) {
-	var bucket = gcs.bucket('monarch-app');
 
-	// Upload a local file to a new file to be created in your bucket.
-	bucket.upload(req.files.file['path'], function(err, file) {
-	  if (!err) {
-	  	console.log('success');
-	  } else {
-	  	console.log('upload failed');
+	ipfs.util.addFromFs(req.files.file['path'], { recursive: false }, (err, result) => {
+	  if (err) {
+	    throw err
 	  }
-	});
+
+		var bucket = gcs.bucket('monarch-app');
+		req.body = {hash : result[0]['hash']};
+		console.log(req.body);
+		// Upload a local file to a new file to be created in your bucket.
+		bucket.upload(req.files.file['path'], function(err, file) {
+		  if (!err) {
+		  	res.end('Success');
+		  } else {
+		  	res.end('Upload failed');
+		  }
+		});
+	})
+
 
 });
 

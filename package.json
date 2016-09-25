@@ -13,6 +13,7 @@
     "express": "~4.13.4",
     "firebase": "^3.4.0",
     "google-cloud": "^0.40.0",
+    "ipfs-api": "^9.0.0",
     "jade": "~1.11.0",
     "morgan": "~1.7.0",
     "multer": "^1.2.0",
